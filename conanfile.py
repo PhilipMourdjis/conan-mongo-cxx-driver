@@ -11,8 +11,8 @@ class MongoCDriverConan(ConanFile):
     url = "https://github.com/mongodb/mongo-cxx-driver"
     license = "https://github.com/mongodb/mongo-cxx-driver/blob/r{0}/LICENSE".format(version)
     settings = "os", "compiler", "arch", "build_type"
-    options = {"use_17_standard": [True, False]}
-    default_options = "use_17_standard=True"
+    options = {"use_17_standard": [True, False], "fPIC": [True, False]}
+    default_options = "use_17_standard=True, fPIC=True"
     requires = 'mongo-c-driver/[~=1.11]@bisect/stable'
     exports_sources = ["CMakeLists.txt", "diff.patch"]
     source_subfolder = "source_subfolder"
@@ -36,7 +36,10 @@ class MongoCDriverConan(ConanFile):
             self.output.fatal("Only C++17 supported for now. Support boost dependency?")
 
         if self.settings.os != 'Windows':
-            cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = True
+            if self.options.fPIC:
+                cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = True
+            else:
+                cmake.definitions['CMAKE_POSITION_INDEPENDENT_CODE'] = False
 
         cmake.configure(build_folder=self.build_subfolder)
         cmake.build()
